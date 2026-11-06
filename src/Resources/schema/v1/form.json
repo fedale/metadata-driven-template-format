@@ -10,7 +10,7 @@
         "definition": {
             "type": "object",
             "required": ["label", "object"],
-            "description": "The composite form definition the app accepts, with every object and via given as an id"
+            "description": "The composite form definition metadata-driven accepts, with every object and via given as an id"
         }
     }
 }

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\TemplateFormat;
+namespace Fedale\TemplateFormat;
 
 /**
  * One document of a package: the envelope (format, kind, id) and the item it describes.

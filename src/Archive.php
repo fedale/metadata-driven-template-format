@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\TemplateFormat;
+namespace Fedale\TemplateFormat;
 
 /**
  * A package as a .tar.gz archive, the form it is downloaded in.

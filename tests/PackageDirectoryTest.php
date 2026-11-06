@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace App\Tests\Unit\TemplateFormat;
+namespace Fedale\TemplateFormat\Tests;
 
-use App\TemplateFormat\Document;
-use App\TemplateFormat\DocumentCodec;
-use App\TemplateFormat\InvalidPackage;
-use App\TemplateFormat\Package;
-use App\TemplateFormat\PackageDirectory;
-use App\Tests\Support\RemovesDirectories;
+use Fedale\TemplateFormat\Document;
+use Fedale\TemplateFormat\DocumentCodec;
+use Fedale\TemplateFormat\InvalidPackage;
+use Fedale\TemplateFormat\Package;
+use Fedale\TemplateFormat\PackageDirectory;
+use Fedale\TemplateFormat\Tests\Support\RemovesDirectories;
 use PHPUnit\Framework\TestCase;
 
 final class PackageDirectoryTest extends TestCase

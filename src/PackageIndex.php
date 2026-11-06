@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\TemplateFormat;
+namespace Fedale\TemplateFormat;
 
 /**
  * The ids and names of a package's documents, for resolving references; built from documents

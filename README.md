@@ -1,0 +1,52 @@
+# fedale/template-format
+
+The template format of [metadata-driven](../metadata-driven): what a template package looks
+like, and the tools to read, check, pack and list one. metadata-driven installs and upgrades
+templates with it; the template catalog checks them with it on publish.
+
+It is data only: a template holds objects, forms, views, translations and seeds, never code.
+
+## What it gives you
+
+| Class | What it does |
+|---|---|
+| `PackageDirectory` | Reads a package from a directory into a `Package` |
+| `Archive` | Packs a package as a reproducible `.tar.gz`, and unpacks one safely (no absolute paths, no `..`, no links, size limits) |
+| `PackageChecker` | The structural checks: every document against its JSON schema, unique ids, references, seeds, files. Returns a list of `Problem` |
+| `DocumentCodec` | A document's YAML envelope (`format`, `kind`, `id`, `spec`) |
+| `TemplateIndex`, `IndexEntry` | The index of a template repository (`metadata-driven/index/v1`): versions, archive URLs, checksums, signatures, yanked versions |
+| `Signature` | Ed25519 signatures of index entries (libsodium) |
+| `SeedRecords` | The records of a seed, inline or from a CSV file |
+| `FieldTypes\FieldTypeCatalog` | The field types of format v1 and their settings, so settings are checked without metadata-driven |
+
+The schemas live in `src/Resources/schema/v1/`, the field types in
+`src/Resources/field-types.v1.json`.
+
+```php
+use Fedale\TemplateFormat\DocumentCodec;
+use Fedale\TemplateFormat\FieldTypes\FieldTypeCatalog;
+use Fedale\TemplateFormat\PackageChecker;
+use Fedale\TemplateFormat\PackageDirectory;
+use Fedale\TemplateFormat\SchemaValidator;
+use Fedale\TemplateFormat\SeedRecords;
+
+$package = (new PackageDirectory(new DocumentCodec()))->read('/srv/templates/shop');
+$problems = (new PackageChecker(new SchemaValidator(), new FieldTypeCatalog(), new SeedRecords()))->check($package);
+```
+
+What only metadata-driven can tell (a form that does not fit its objects, a value that does not
+fit its field) is checked there, at install.
+
+## Requirements
+
+PHP 8.4 with `sodium` and `zlib`; `symfony/yaml` and `opis/json-schema`. Nothing else: no
+framework, no database.
+
+## Development
+
+```bash
+composer install
+composer qa    # php-cs-fixer (dry run), PHPStan at level max, PHPUnit
+```
+
+The format is documented in metadata-driven's `docs/templates.md`.

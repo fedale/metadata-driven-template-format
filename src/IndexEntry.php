@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\TemplateFormat;
+namespace Fedale\TemplateFormat;
 
 /**
  * One version of one template, as an index lists it.

@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Tests\Unit\TemplateFormat;
+namespace Fedale\TemplateFormat\Tests;
 
-use App\TemplateFormat\IndexEntry;
-use App\TemplateFormat\InvalidIndex;
-use App\TemplateFormat\TemplateIndex;
+use Fedale\TemplateFormat\IndexEntry;
+use Fedale\TemplateFormat\InvalidIndex;
+use Fedale\TemplateFormat\TemplateIndex;
 use PHPUnit\Framework\TestCase;
 
 final class TemplateIndexTest extends TestCase

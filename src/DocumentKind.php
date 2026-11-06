@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\TemplateFormat;
+namespace Fedale\TemplateFormat;
 
 enum DocumentKind: string
 {

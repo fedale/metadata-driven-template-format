@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\TemplateFormat;
+namespace Fedale\TemplateFormat;
 
 /**
  * Ed25519 signatures of index entries (libsodium). A signature covers the format, the

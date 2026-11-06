@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace App\Tests\Unit\TemplateFormat;
+namespace Fedale\TemplateFormat\Tests;
 
-use App\TemplateFormat\FieldTypes\FieldOwner;
-use App\TemplateFormat\FieldTypes\FieldTypeCatalog;
-use App\TemplateFormat\FieldTypes\ReferenceKind;
-use App\TemplateFormat\FieldTypes\SettingReference;
+use Fedale\TemplateFormat\FieldTypes\FieldOwner;
+use Fedale\TemplateFormat\FieldTypes\FieldTypeCatalog;
+use Fedale\TemplateFormat\FieldTypes\ReferenceKind;
+use Fedale\TemplateFormat\FieldTypes\SettingReference;
 use PHPUnit\Framework\TestCase;
 
 /**
- * The catalog itself; FieldTypeCatalogMatchesTheAppTest checks it against the app's types.
+ * The catalog itself; FieldTypeCatalogMatchesTheAppTest in metadata-driven checks it against the app's types.
  */
 final class FieldTypeCatalogTest extends TestCase
 {

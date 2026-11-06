@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Tests\Unit\TemplateFormat;
+namespace Fedale\TemplateFormat\Tests;
 
-use App\TemplateFormat\Archive;
-use App\TemplateFormat\InvalidPackage;
-use App\Tests\Support\RemovesDirectories;
+use Fedale\TemplateFormat\Archive;
+use Fedale\TemplateFormat\InvalidPackage;
+use Fedale\TemplateFormat\Tests\Support\RemovesDirectories;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 

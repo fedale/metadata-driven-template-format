@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace App\Tests\Unit\TemplateFormat;
+namespace Fedale\TemplateFormat\Tests;
 
-use App\TemplateFormat\Document;
-use App\TemplateFormat\DocumentKind;
-use App\TemplateFormat\InvalidPackage;
-use App\TemplateFormat\Package;
-use App\TemplateFormat\SeedRecords;
-use App\Tests\Support\RemovesDirectories;
+use Fedale\TemplateFormat\Document;
+use Fedale\TemplateFormat\DocumentKind;
+use Fedale\TemplateFormat\InvalidPackage;
+use Fedale\TemplateFormat\Package;
+use Fedale\TemplateFormat\SeedRecords;
+use Fedale\TemplateFormat\Tests\Support\RemovesDirectories;
 use PHPUnit\Framework\TestCase;
 
 final class SeedRecordsTest extends TestCase

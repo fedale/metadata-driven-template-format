@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace App\TemplateFormat\FieldTypes;
+namespace Fedale\TemplateFormat\FieldTypes;
 
-use App\TemplateFormat\Format;
+use Fedale\TemplateFormat\Format;
 
 /**
  * The field types the format knows, and the settings of each, from field-types.v1.json.
  *
- * The format checks a template's settings with it, without the app: the catalog can refuse a
+ * The format checks a template's settings with it, without metadata-driven: the catalog can refuse a
  * broken template on publish. In a template, settings are partial (what is left out takes its
  * default), and a setting naming an object or a field holds the id of an item of the template.
  */

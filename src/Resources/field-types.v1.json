@@ -1,5 +1,5 @@
 {
-    "$comment": "The field types of format metadata-driven/v1 and their settings. A setting of kind object or field holds the id of an item of the template; of: self (a field of the same object), target (of the object named by its target setting) or through (of the object named by its through setting). The app checks this file against its own field types (FieldTypeCatalogTest).",
+    "$comment": "The field types of format metadata-driven/v1 and their settings. A setting of kind object or field holds the id of an item of the template; of: self (a field of the same object), target (of the object named by its target setting) or through (of the object named by its through setting). metadata-driven checks this file against its own field types (FieldTypeCatalogMatchesTheAppTest).",
     "text": {
         "maxLength": { "kind": "integer", "min": 1, "max": 10000, "default": 255 },
         "multiline": { "kind": "boolean", "default": false },

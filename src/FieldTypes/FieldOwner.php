@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\TemplateFormat\FieldTypes;
+namespace Fedale\TemplateFormat\FieldTypes;
 
 /**
  * The object a field-reference setting points into.

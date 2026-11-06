@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-namespace App\TemplateFormat;
+namespace Fedale\TemplateFormat;
 
-use App\TemplateFormat\FieldTypes\FieldOwner;
-use App\TemplateFormat\FieldTypes\FieldTypeCatalog;
-use App\TemplateFormat\FieldTypes\ReferenceKind;
+use Fedale\TemplateFormat\FieldTypes\FieldOwner;
+use Fedale\TemplateFormat\FieldTypes\FieldTypeCatalog;
+use Fedale\TemplateFormat\FieldTypes\ReferenceKind;
 
 /**
- * The structural checks of a package, without the app: each document against its schema, the
+ * The structural checks of a package, without metadata-driven: each document against its schema, the
  * settings of every field against the field type catalog, unique ids and names, and every
  * reference naming an item of the template.
  *
- * What only the app can tell (a composite form that does not fit its objects, a grid view naming
- * a field that cannot be shown) is checked when the template is installed.
+ * What only metadata-driven can tell (a composite form that does not fit its objects, a grid
+ * view naming a field that cannot be shown) is checked when the template is installed.
  */
 final class PackageChecker
 {
@@ -82,7 +82,7 @@ final class PackageChecker
     /**
      * Each seed: its object, its key (a unique field), its records (fields of the object, a
      * key each, once); then what the records point at: the keys of the records of other seeds,
-     * and files of the package. Whether a value fits its field is the app's business, at install.
+     * and files of the package. Whether a value fits its field is metadata-driven's business, at install.
      *
      * @param list<Document> $seeds
      *

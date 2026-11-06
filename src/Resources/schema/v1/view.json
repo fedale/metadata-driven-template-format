@@ -10,6 +10,6 @@
         "kind": { "enum": ["form", "grid"] },
         "name": { "type": "string", "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$", "maxLength": 50 },
         "default": { "type": "boolean" },
-        "template": { "type": "string", "minLength": 1, "description": "The view template as the app stores it: the HTML layout of a form view, the YAML of a grid view" }
+        "template": { "type": "string", "minLength": 1, "description": "The view template as metadata-driven stores it: the HTML layout of a form view, the YAML of a grid view" }
     }
 }

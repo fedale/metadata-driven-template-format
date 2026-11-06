@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace App\Tests\Unit\TemplateFormat;
+namespace Fedale\TemplateFormat\Tests;
 
-use App\TemplateFormat\IndexEntry;
-use App\TemplateFormat\Signature;
+use Fedale\TemplateFormat\IndexEntry;
+use Fedale\TemplateFormat\Signature;
 use PHPUnit\Framework\TestCase;
 
 final class SignatureTest extends TestCase

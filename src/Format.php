@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace App\TemplateFormat;
+namespace Fedale\TemplateFormat;
 
 /**
  * The template format: what every document and every package must look like.
  *
- * App\TemplateFormat depends on nothing else in App (deptrac.template-format.yaml): it is meant
- * to move into a package of its own, fedale/template-format, used by the catalog as well.
+ * The library depends on symfony/yaml and opis/json-schema only: metadata-driven installs
+ * templates with it, the catalog checks them with it on publish.
  */
 final class Format
 {
@@ -26,7 +26,7 @@ final class Format
     /** Dot-separated segments, at least two, the first naming the vendor: "acme.product.name". */
     public const string ID_PATTERN = '~^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$~';
 
-    /** The machine names of objects, fields and forms, as the app accepts them. */
+    /** The machine names of objects, fields and forms, as metadata-driven accepts them. */
     public const string MACHINE_NAME_PATTERN = '~^[a-z][a-z0-9]*(_[a-z0-9]+)*$~';
 
     /**

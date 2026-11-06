@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\TemplateFormat;
+namespace Fedale\TemplateFormat;
 
 use Opis\JsonSchema\Errors\ErrorFormatter;
 use Opis\JsonSchema\Helper;
@@ -50,7 +50,7 @@ final class SchemaValidator
     {
         if (null === $this->validator) {
             $this->validator = new Validator();
-            // Every problem of a document at once, as the app reports a form's errors.
+            // Every problem of a document at once, as metadata-driven reports a form's errors.
             $this->validator->setMaxErrors(100);
             foreach (DocumentKind::cases() as $kind) {
                 $file = self::DIRECTORY.'/'.strtolower($kind->value).'.json';

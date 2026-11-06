@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace App\Tests\Unit\TemplateFormat;
+namespace Fedale\TemplateFormat\Tests;
 
-use App\TemplateFormat\Document;
-use App\TemplateFormat\DocumentCodec;
-use App\TemplateFormat\FieldTypes\FieldTypeCatalog;
-use App\TemplateFormat\Package;
-use App\TemplateFormat\PackageChecker;
-use App\TemplateFormat\PackageDirectory;
-use App\TemplateFormat\SchemaValidator;
-use App\TemplateFormat\SeedRecords;
+use Fedale\TemplateFormat\Document;
+use Fedale\TemplateFormat\DocumentCodec;
+use Fedale\TemplateFormat\FieldTypes\FieldTypeCatalog;
+use Fedale\TemplateFormat\Package;
+use Fedale\TemplateFormat\PackageChecker;
+use Fedale\TemplateFormat\PackageDirectory;
+use Fedale\TemplateFormat\SchemaValidator;
+use Fedale\TemplateFormat\SeedRecords;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 

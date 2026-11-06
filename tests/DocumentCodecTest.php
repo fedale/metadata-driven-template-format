@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace App\Tests\Unit\TemplateFormat;
+namespace Fedale\TemplateFormat\Tests;
 
-use App\TemplateFormat\Document;
-use App\TemplateFormat\DocumentCodec;
-use App\TemplateFormat\DocumentKind;
-use App\TemplateFormat\InvalidPackage;
+use Fedale\TemplateFormat\Document;
+use Fedale\TemplateFormat\DocumentCodec;
+use Fedale\TemplateFormat\DocumentKind;
+use Fedale\TemplateFormat\InvalidPackage;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 

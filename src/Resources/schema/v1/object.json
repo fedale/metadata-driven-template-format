@@ -17,7 +17,7 @@
                 {
                     "type": "object",
                     "additionalProperties": false,
-                    "description": "Left out or null: the app's default (its default handler, its text fields)",
+                    "description": "Left out or null: metadata-driven's default (its default handler, its text fields)",
                     "properties": {
                         "handler": { "type": ["string", "null"], "minLength": 1 },
                         "fields": { "oneOf": [{ "type": "null" }, { "type": "array", "items": { "$ref": "#/$defs/id" } }] }

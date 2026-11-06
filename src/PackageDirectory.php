@@ -27,6 +27,11 @@ final class PackageDirectory
         if (!is_file($manifestPath)) {
             throw new InvalidPackage([new Problem(Format::MANIFEST, '', \sprintf('No manifest in "%s".', $directory))]);
         }
+        // Nothing is read through a link: what it points at could be anywhere, and a problem
+        // quoting it would show it to whoever reads the report.
+        if (!self::inside($directory, $manifestPath)) {
+            throw new InvalidPackage([new Problem(Format::MANIFEST, '', 'Not a regular file.')]);
+        }
         $manifest = $this->codec->decode((string) file_get_contents($manifestPath), Format::MANIFEST);
         if (DocumentKind::Template !== $manifest->kind) {
             throw new InvalidPackage([new Problem(Format::MANIFEST, 'kind', 'The manifest is of kind Template.')]);
@@ -42,7 +47,7 @@ final class PackageDirectory
             }
             foreach (glob($directory.'/'.$pattern) ?: [] as $file) {
                 $path = substr($file, \strlen($directory) + 1);
-                if (is_link($file) || !is_file($file)) {
+                if (!self::inside($directory, $file)) {
                     $problems[] = new Problem($path, '', 'Not a regular file.');
                     continue;
                 }
@@ -59,6 +64,19 @@ final class PackageDirectory
         ksort($documents);
 
         return new Package($manifest, array_values($documents), $directory);
+    }
+
+    /**
+     * Whether a file is a regular file inside the package, with no symbolic link on the way: a
+     * linked "objects" directory or a linked document both resolve elsewhere.
+     */
+    private static function inside(string $directory, string $file): bool
+    {
+        $root = realpath($directory);
+        $real = realpath($file);
+
+        return false !== $root && false !== $real && !is_link($file) && is_file($real)
+            && $real === $root.substr($file, \strlen($directory));
     }
 
     /**

@@ -17,7 +17,7 @@ trait RemovesDirectories
         $entries = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($directory, \FilesystemIterator::SKIP_DOTS), \RecursiveIteratorIterator::CHILD_FIRST);
         foreach ($entries as $entry) {
             if ($entry instanceof \SplFileInfo) {
-                $entry->isDir() ? rmdir($entry->getPathname()) : unlink($entry->getPathname());
+                $entry->isDir() && !$entry->isLink() ? rmdir($entry->getPathname()) : unlink($entry->getPathname());
             }
         }
         rmdir($directory);

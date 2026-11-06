@@ -86,6 +86,44 @@ final class PackageDirectoryTest extends TestCase
         }
     }
 
+    public function testReadsNothingThroughASymbolicLink(): void
+    {
+        $directories = new PackageDirectory(new DocumentCodec());
+        $directories->write(PackageCheckerTest::fixture(), $this->directory.'/package');
+        // A linked document, and a linked directory of documents: both resolve outside.
+        mkdir($this->directory.'/elsewhere');
+        rename($this->directory.'/package/objects', $this->directory.'/elsewhere/objects');
+        symlink($this->directory.'/elsewhere/objects', $this->directory.'/package/objects');
+        rename($this->directory.'/package/forms/catalogue.yaml', $this->directory.'/elsewhere/catalogue.yaml');
+        symlink($this->directory.'/elsewhere/catalogue.yaml', $this->directory.'/package/forms/catalogue.yaml');
+
+        try {
+            $directories->read($this->directory.'/package');
+            self::fail('A document read through a link must be refused.');
+        } catch (InvalidPackage $e) {
+            self::assertSame([
+                'objects/category.yaml: Not a regular file.',
+                'objects/product.yaml: Not a regular file.',
+                'objects/tag.yaml: Not a regular file.',
+                'forms/catalogue.yaml: Not a regular file.',
+            ], array_map(strval(...), $e->problems));
+        }
+    }
+
+    public function testRefusesALinkedManifest(): void
+    {
+        mkdir($this->directory);
+        file_put_contents($this->directory.'/secret.yaml', 'runner secret: [');
+        symlink($this->directory.'/secret.yaml', $this->directory.'/template.yaml');
+
+        try {
+            (new PackageDirectory(new DocumentCodec()))->read($this->directory);
+            self::fail('A linked manifest must be refused.');
+        } catch (InvalidPackage $e) {
+            self::assertSame(['template.yaml: Not a regular file.'], array_map(strval(...), $e->problems));
+        }
+    }
+
     public function testAPackageHasAManifest(): void
     {
         $this->expectException(InvalidPackage::class);

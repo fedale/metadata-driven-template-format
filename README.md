@@ -18,6 +18,7 @@ It is data only: a template holds objects, forms, views, translations and seeds,
 | `Signature` | Ed25519 signatures of index entries (libsodium) |
 | `SeedRecords` | The records of a seed, inline or from a CSV file |
 | `FieldTypes\FieldTypeCatalog` | The field types of format v1 and their settings, so settings are checked without metadata-driven |
+| `Versions\ItemStates`, `Versions\VersionCheck` | A package's items (each object, field, view, form, translation) in a form that compares equal when they mean the same, and whether a version's number fits what it changed against an earlier version: a patch changes labels, layouts, forms and translations; a minor adds and changes settings; removals, renames and migration steps need a major |
 
 The schemas live in `src/Resources/schema/v1/`, the field types in
 `src/Resources/field-types.v1.json`.
@@ -33,6 +34,19 @@ use Fedale\TemplateFormat\SeedRecords;
 $package = (new PackageDirectory(new DocumentCodec()))->read('/srv/templates/shop');
 $problems = (new PackageChecker(new SchemaValidator(), new FieldTypeCatalog(), new SeedRecords()))->check($package);
 ```
+
+Checking a new version's number against the previous one:
+
+```php
+use Fedale\TemplateFormat\Versions\ItemStates;
+use Fedale\TemplateFormat\Versions\VersionCheck;
+
+$states = new ItemStates(new FieldTypeCatalog());
+$problems = VersionCheck::problems($states->of($previous), $states->of($next), '1.2.0', '1.3.0', migrates: false);
+// e.g. "objects/product.yaml: field acme.product.photo: a removal needs a new major version, 1.3.0 is not one."
+```
+
+Seed records are not compared: a version that only changes records fits any number.
 
 What only metadata-driven can tell (a form that does not fit its objects, a value that does not
 fit its field) is checked there, at install.

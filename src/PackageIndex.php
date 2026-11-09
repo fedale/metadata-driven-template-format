@@ -8,6 +8,10 @@ namespace Fedale\TemplateFormat;
  * The ids and names of a package's documents, for resolving references; built from documents
  * that passed their schema. Duplicates are reported as problems.
  *
+ * With the indexes of the templates the package requires (withRequired()), objects and fields
+ * resolve in those too: a requiring template references their items. hasOwnObject() and
+ * isOwnField() tell its own items apart.
+ *
  * @internal used by PackageChecker
  */
 final class PackageIndex
@@ -23,6 +27,12 @@ final class PackageIndex
 
     /** @var array<string, array<string, array<mixed>>> object id => field name => field */
     private array $fields = [];
+
+    /** @var array<string, self> the indexes of the required templates, by template name */
+    private array $required = [];
+
+    /** @var list<string> the form ids */
+    private array $forms = [];
 
     /**
      * @param list<Document> $documents
@@ -49,6 +59,9 @@ final class PackageIndex
                 $names[$name] ??= $document->path;
             }
 
+            if (DocumentKind::Form === $document->kind) {
+                $this->forms[] = $document->id;
+            }
             if (DocumentKind::Object === $document->kind) {
                 $this->objects[$document->id] = true;
                 $problems = [...$problems, ...$this->indexFields($document)];
@@ -57,14 +70,58 @@ final class PackageIndex
         $this->problems = $problems;
     }
 
+    /**
+     * @param array<string, self> $required the indexes of the required templates, by name
+     */
+    public function withRequired(array $required): void
+    {
+        $this->required = $required;
+    }
+
+    /**
+     * Whether the id names an object of the package or of a template it requires.
+     */
     public function hasObject(string $id): bool
+    {
+        return $this->hasOwnObject($id) || null !== $this->requiredTemplateOf($id);
+    }
+
+    public function hasOwnObject(string $id): bool
     {
         return isset($this->objects[$id]);
     }
 
+    /**
+     * The required template defining the object; null for an object of the package, or none.
+     */
+    public function requiredTemplateOf(string $objectId): ?string
+    {
+        foreach ($this->required as $name => $index) {
+            if ($index->hasOwnObject($objectId)) {
+                return $name;
+            }
+        }
+
+        return null;
+    }
+
     public function ownerOf(string $fieldId): ?string
     {
-        return $this->fieldOwners[$fieldId] ?? null;
+        if (isset($this->fieldOwners[$fieldId])) {
+            return $this->fieldOwners[$fieldId];
+        }
+        foreach ($this->required as $index) {
+            if (null !== ($owner = $index->ownerOf($fieldId))) {
+                return $owner;
+            }
+        }
+
+        return null;
+    }
+
+    public function isOwnField(string $fieldId): bool
+    {
+        return isset($this->fieldOwners[$fieldId]);
     }
 
     /**
@@ -72,7 +129,26 @@ final class PackageIndex
      */
     public function fieldsOf(string $objectId): array
     {
-        return $this->fields[$objectId] ?? [];
+        if (isset($this->fields[$objectId])) {
+            return $this->fields[$objectId];
+        }
+        foreach ($this->required as $index) {
+            if ($index->hasOwnObject($objectId)) {
+                return $index->fieldsOf($objectId);
+            }
+        }
+
+        return [];
+    }
+
+    /**
+     * The package's own ids, by kind: objects, fields, forms.
+     *
+     * @return array{objects: list<string>, fields: list<string>, forms: list<string>}
+     */
+    public function ownIds(): array
+    {
+        return ['objects' => array_keys($this->objects), 'fields' => array_keys($this->fieldOwners), 'forms' => $this->forms];
     }
 
     /**

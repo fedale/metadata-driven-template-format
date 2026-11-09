@@ -1,0 +1,20 @@
+format: metadata-driven/v1
+kind: Object
+id: acme.person
+spec:
+  name: person
+  label: Person
+  plural: People
+  fields:
+    - id: acme.person.email
+      name: email
+      type: email
+      label: Email
+      required: true
+      unique: true
+    - id: acme.person.region
+      name: region
+      type: relation
+      label: Region
+      settings:
+        target: acme.region

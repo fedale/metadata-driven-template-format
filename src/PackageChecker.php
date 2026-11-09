@@ -13,6 +13,11 @@ use Fedale\TemplateFormat\FieldTypes\ReferenceKind;
  * settings of every field against the field type catalog, unique ids and names, and every
  * reference naming an item of the template.
  *
+ * A template may require others (`spec.requires`, `vendor/name: ^1.2`): given those templates,
+ * its references may also name their objects and fields, and its seeds the records of their
+ * seeds. It only references them: its ids must differ from theirs, and its views and seeds are
+ * of its own objects.
+ *
  * What only metadata-driven can tell (a composite form that does not fit its objects, a grid
  * view naming a field that cannot be shown) is checked when the template is installed.
  */
@@ -26,9 +31,13 @@ final class PackageChecker
     }
 
     /**
+     * @param list<Package> $required the templates the package requires, as installed or
+     *                                published; each must fit its constraint. A requirement not
+     *                                given is a problem: the references to it cannot be checked
+     *
      * @return list<Problem> every problem found; empty when the package is valid
      */
-    public function check(Package $package): array
+    public function check(Package $package, array $required = []): array
     {
         $problems = $this->schemas->validate($package->manifest);
         $valid = [];
@@ -45,6 +54,10 @@ final class PackageChecker
 
         $index = new PackageIndex($valid);
         $problems = [...$problems, ...$index->problems];
+        [$requirements, $requiredSeeds, $found] = $this->requirements($package, $required);
+        $problems = [...$problems, ...$found];
+        $index->withRequired($requirements);
+        $problems = [...$problems, ...self::checkOwnIds($package, $index, $requirements)];
         foreach ($valid as $document) {
             $problems = [...$problems, ...match ($document->kind) {
                 DocumentKind::Object => $this->checkObject($document, $index),
@@ -55,7 +68,113 @@ final class PackageChecker
         }
         $seeds = array_values(array_filter($valid, static fn (Document $document): bool => DocumentKind::Seed === $document->kind));
 
-        return [...$problems, ...$this->checkSeeds($package, $seeds, $index), ...$this->checkMigrations($package->manifest, $index)];
+        return [...$problems, ...$this->checkSeeds($package, $seeds, $index, $requiredSeeds), ...$this->checkMigrations($package->manifest, $index)];
+    }
+
+    /**
+     * The requirements of `spec.requires` against the templates given: each a valid constraint,
+     * each given in a version it allows, none the template itself.
+     *
+     * @param list<Package> $required
+     *
+     * @return array{array<string, PackageIndex>, array<string, array<string, true>>, list<Problem>} the indexes of the required
+     *                                                                                               templates by name, the keys of their seeds' records by object id, and the problems
+     */
+    private function requirements(Package $package, array $required): array
+    {
+        $given = [];
+        foreach ($required as $requirement) {
+            $given[$requirement->name()] = $requirement;
+        }
+
+        $indexes = [];
+        $seeds = [];
+        $problems = [];
+        $requires = $package->manifest->spec['requires'] ?? null;
+        foreach (\is_array($requires) ? $requires : [] as $name => $constraint) {
+            $name = (string) $name;
+            if ('format' === $name) {
+                continue;
+            }
+            $at = 'spec.requires.'.$name;
+            if ($name === $package->name()) {
+                $problems[] = new Problem(Format::MANIFEST, $at, 'A template does not require itself.');
+                continue;
+            }
+            try {
+                $allowed = Constraint::parse(\is_scalar($constraint) ? (string) $constraint : '');
+            } catch (\InvalidArgumentException $e) {
+                $problems[] = new Problem(Format::MANIFEST, $at, $e->getMessage());
+                continue;
+            }
+            $requirement = $given[$name] ?? null;
+            if (null === $requirement) {
+                $problems[] = new Problem(Format::MANIFEST, $at, \sprintf('%s is required: it must be installed, or given to check against.', $name));
+                continue;
+            }
+            if (!$allowed->allows($requirement->version())) {
+                $problems[] = new Problem(Format::MANIFEST, $at, \sprintf('%s %s does not fit %s.', $name, $requirement->version(), $allowed));
+                continue;
+            }
+            $indexes[$name] = new PackageIndex($requirement->documents);
+            foreach ($requirement->documentsOf(DocumentKind::Seed) as $seed) {
+                $object = \is_string($seed->spec['object'] ?? null) ? $seed->spec['object'] : '';
+                $key = \is_string($seed->spec['key'] ?? null) ? $seed->spec['key'] : '';
+                try {
+                    foreach ($this->seedRecords->of($requirement, $seed) as $record) {
+                        $value = $record[$key] ?? null;
+                        if (\is_scalar($value) && '' !== trim((string) $value)) {
+                            $seeds[$object][trim((string) $value)] = true;
+                        }
+                    }
+                } catch (InvalidPackage) {
+                    // A required template was checked when it was published or installed.
+                }
+            }
+        }
+
+        return [$indexes, $seeds, $problems];
+    }
+
+    /**
+     * The package's own objects, fields and forms may not take an id a required template uses:
+     * a reference would name two items.
+     *
+     * @param array<string, PackageIndex> $requirements
+     *
+     * @return list<Problem>
+     */
+    private static function checkOwnIds(Package $package, PackageIndex $index, array $requirements): array
+    {
+        if ([] === $requirements) {
+            return [];
+        }
+        $problems = [];
+        foreach ($package->documents as $document) {
+            foreach ($requirements as $name => $required) {
+                $taken = match ($document->kind) {
+                    DocumentKind::Object => \in_array($document->id, $required->ownIds()['objects'], true),
+                    DocumentKind::Form => \in_array($document->id, $required->ownIds()['forms'], true),
+                    default => false,
+                };
+                if ($taken) {
+                    $problems[] = new Problem($document->path, 'id', \sprintf('Already the id of an item of %s, which this template requires.', $name));
+                }
+            }
+            if (DocumentKind::Object !== $document->kind) {
+                continue;
+            }
+            foreach (\is_array($document->spec['fields'] ?? null) ? $document->spec['fields'] : [] as $position => $field) {
+                $id = \is_array($field) && \is_string($field['id'] ?? null) ? $field['id'] : null;
+                foreach ($requirements as $name => $required) {
+                    if (null !== $id && \in_array($id, $required->ownIds()['fields'], true)) {
+                        $problems[] = new Problem($document->path, \sprintf('spec.fields.%d.id', $position), \sprintf('Already the id of a field of %s, which this template requires.', $name));
+                    }
+                }
+            }
+        }
+
+        return $problems;
     }
 
     /**
@@ -70,7 +189,7 @@ final class PackageChecker
         foreach (\is_array($manifest->spec['migrations'] ?? null) ? $manifest->spec['migrations'] : [] as $version => $steps) {
             foreach (\is_array($steps) ? $steps : [] as $i => $step) {
                 $to = \is_array($step) && \is_string($step['to'] ?? null) ? $step['to'] : null;
-                if (null !== $to && null === $index->ownerOf($to)) {
+                if (null !== $to && !$index->isOwnField($to)) {
                     $problems[] = new Problem($manifest->path, \sprintf('spec.migrations.%s.%d.to', $version, $i), \sprintf('No field of the template has the id "%s".', $to));
                 }
             }
@@ -84,11 +203,12 @@ final class PackageChecker
      * key each, once); then what the records point at: the keys of the records of other seeds,
      * and files of the package. Whether a value fits its field is metadata-driven's business, at install.
      *
-     * @param list<Document> $seeds
+     * @param list<Document>                     $seeds
+     * @param array<string, array<string, true>> $requiredSeeds the keys of the required templates' records, by object id
      *
      * @return list<Problem>
      */
-    private function checkSeeds(Package $package, array $seeds, PackageIndex $index): array
+    private function checkSeeds(Package $package, array $seeds, PackageIndex $index, array $requiredSeeds = []): array
     {
         $problems = [];
         $loaded = [];
@@ -98,8 +218,10 @@ final class PackageChecker
                 continue;
             }
             $object = \is_string($seed->spec['object'] ?? null) ? $seed->spec['object'] : '';
-            if (!$index->hasObject($object)) {
-                $problems[] = new Problem($seed->path, 'spec.object', \sprintf('No object of the template has the id "%s".', $object));
+            if (!$index->hasOwnObject($object)) {
+                $problems[] = new Problem($seed->path, 'spec.object', null !== ($owner = $index->requiredTemplateOf($object))
+                    ? \sprintf('"%s" is an object of %s: a template seeds its own objects only.', $object, $owner)
+                    : \sprintf('No object of the template has the id "%s".', $object));
                 continue;
             }
             $fields = $index->fieldsOf($object);
@@ -146,7 +268,7 @@ final class PackageChecker
                     $at = self::recordAt($seed, $i, $name);
                     $settings = \is_array($field['settings'] ?? null) ? $field['settings'] : [];
                     $problems = [...$problems, ...match ($field['type'] ?? null) {
-                        'relation', 'many_to_many' => $this->referenceProblems($seed->path, $at, $field['type'], $value, \is_string($settings['target'] ?? null) ? $settings['target'] : '', $loaded),
+                        'relation', 'many_to_many' => $this->referenceProblems($seed->path, $at, $field['type'], $value, \is_string($settings['target'] ?? null) ? $settings['target'] : '', $loaded, $requiredSeeds),
                         'file' => $this->fileProblems($package, $seed->path, $at, true === ($settings['multiple'] ?? false) ? SeedRecords::list($value) : [$value]),
                         default => [],
                     }];
@@ -158,20 +280,22 @@ final class PackageChecker
     }
 
     /**
-     * @param array<string, array{Document, list<array<string, mixed>>, array<string, true>}> $loaded the seeds, by object id
+     * @param array<string, array{Document, list<array<string, mixed>>, array<string, true>}> $loaded        the seeds, by object id
+     * @param array<string, array<string, true>>                                              $requiredSeeds the keys of the required templates' records, by object id
      *
      * @return list<Problem>
      */
-    private function referenceProblems(string $path, string $at, string $type, mixed $value, string $target, array $loaded): array
+    private function referenceProblems(string $path, string $at, string $type, mixed $value, string $target, array $loaded, array $requiredSeeds = []): array
     {
-        if (!isset($loaded[$target])) {
+        $known = $loaded[$target][2] ?? $requiredSeeds[$target] ?? null;
+        if (null === $known) {
             return [new Problem($path, $at, \sprintf('Points at records of "%s", and the template has no seed for it.', $target))];
         }
         $problems = [];
         // A relation holds one key, written whole; a many-to-many field a list of them.
         $keys = 'many_to_many' === $type ? SeedRecords::list($value) : (\is_scalar($value) ? [trim((string) $value)] : []);
         foreach ($keys as $key) {
-            if (!isset($loaded[$target][2][$key])) {
+            if (!isset($known[$key])) {
                 $problems[] = new Problem($path, $at, \sprintf('No record of the seed of "%s" has the key "%s".', $target, $key));
             }
         }
@@ -301,9 +425,14 @@ final class PackageChecker
     {
         $object = $view->spec['object'];
 
-        return \is_string($object) && !$index->hasObject($object)
-            ? [new Problem($view->path, 'spec.object', \sprintf('No object of the template has the id "%s".', $object))]
-            : [];
+        if (!\is_string($object) || $index->hasOwnObject($object)) {
+            return [];
+        }
+        $owner = $index->requiredTemplateOf($object);
+
+        return [new Problem($view->path, 'spec.object', null !== $owner
+            ? \sprintf('"%s" is an object of %s: a template adds views to its own objects only.', $object, $owner)
+            : \sprintf('No object of the template has the id "%s".', $object))];
     }
 
     /**

@@ -18,6 +18,7 @@ It is data only: a template holds objects, forms, views, translations and seeds,
 | `Signature` | Ed25519 signatures of index entries (libsodium) |
 | `SeedRecords` | The records of a seed, inline or from a CSV file |
 | `FieldTypes\FieldTypeCatalog` | The field types of format v1 and their settings, so settings are checked without metadata-driven |
+| `Constraint` | A version constraint of `spec.requires`: `^1.2`, `~1.2` or an exact `1.2.3` |
 | `Versions\ItemStates`, `Versions\VersionCheck` | A package's items (each object, field, view, form, translation) in a form that compares equal when they mean the same, and whether a version's number fits what it changed against an earlier version: a patch changes labels, layouts, forms and translations; a minor adds and changes settings; removals, renames and migration steps need a major |
 
 The schemas live in `src/Resources/schema/v1/`, the field types in
@@ -34,6 +35,28 @@ use Fedale\TemplateFormat\SeedRecords;
 $package = (new PackageDirectory(new DocumentCodec()))->read('/srv/templates/shop');
 $problems = (new PackageChecker(new SchemaValidator(), new FieldTypeCatalog(), new SeedRecords()))->check($package);
 ```
+
+### Templates requiring templates
+
+A template may require others, with a constraint each:
+
+```yaml
+spec:
+  requires:
+    format: metadata-driven/v1
+    acme/places: ^1.0
+```
+
+It then references their objects and fields by id, as its own (a relation's `target`, a composite
+form's `object` and `via`, a seed's references by the key of the required seed), and only
+references them: its ids differ from theirs, its views and seeds are of its own objects. Check it
+with the required templates, as installed or published:
+
+```php
+$problems = $checker->check($people, [$places]);   // acme/places in a version ^1.0 allows
+```
+
+A requirement not given is a problem: the references to it cannot be checked.
 
 Checking a new version's number against the previous one:
 

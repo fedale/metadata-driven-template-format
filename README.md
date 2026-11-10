@@ -1,4 +1,4 @@
-# fedale/template-format
+# fedale/metadata-driven-template-format
 
 The template format of [metadata-driven](../metadata-driven): what a template package looks
 like, and the tools to read, check, pack and list one. metadata-driven installs and upgrades

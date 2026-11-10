@@ -1,5 +1,5 @@
 {
-    "name": "fedale/template-format",
+    "name": "fedale/metadata-driven-template-format",
     "type": "library",
     "description": "The metadata-driven template format: schemas, package reader, structural checks, archives, signed indexes",
     "keywords": ["metadata-driven", "templates", "json-schema", "ed25519"],
